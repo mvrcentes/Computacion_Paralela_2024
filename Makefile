@@ -5,16 +5,32 @@ LDFLAGS=-L/opt/homebrew/lib -lSDL2 -lSDL2_gfx -L/opt/homebrew/Cellar/libomp/18.1
 SRC_DIR=src
 BUILD_DIR=build
 
-# Compilar el proyecto
-all: screensaver
+# Asegúrate de que el directorio build exista
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
-screensaver:
-	$(CC) $(CFLAGS) $(SRC_DIR)/main.cpp -o $(BUILD_DIR)/screensaver $(LDFLAGS)
+# Compilar el proyecto para main.cpp
+screensaver_main: $(BUILD_DIR)/screensaver_main
+
+$(BUILD_DIR)/screensaver_main: $(SRC_DIR)/main.cpp | $(BUILD_DIR)
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)
+
+# Compilar el proyecto para parallel.cpp
+screensaver_parallel: $(BUILD_DIR)/screensaver_parallel
+
+$(BUILD_DIR)/screensaver_parallel: $(SRC_DIR)/parallel.cpp | $(BUILD_DIR)
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)
 
 # Limpiar archivos compilados
 clean:
 	rm -f $(BUILD_DIR)/*
 
-# Ejecutar el programa
-run: screensaver
-	./$(BUILD_DIR)/screensaver
+# Ejecutar los programas
+run_main: screensaver_main
+	./$(BUILD_DIR)/screensaver_main
+
+run_parallel: screensaver_parallel
+	./$(BUILD_DIR)/screensaver_parallel
+
+# Objetivo por defecto
+all: screensaver_main screensaver_parallel
