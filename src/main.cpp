@@ -7,6 +7,20 @@
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
 
+/**
+ * @struct Circle
+ * @brief Representa un círculo que se mueve dentro de una ventana.
+ *
+ * Esta estructura almacena la posición, velocidad, radio y color de un círculo que
+ * se renderiza en la pantalla del screensaver.
+ *
+ * @param x Posición en el eje X.
+ * @param y Posición en el eje Y.
+ * @param dx Velocidad en el eje X.
+ * @param dy Velocidad en el eje Y.
+ * @param radius Radio del círculo.
+ * @param color Color del círculo, utilizando SDL_Color.
+ */
 struct Circle
 {
   float x, y;      // Posición
@@ -15,6 +29,19 @@ struct Circle
   SDL_Color color; // Color
 };
 
+/**
+ * @brief Punto de entrada principal para el screensaver.
+ *
+ * Inicializa la SDL y crea una ventana y un renderizador. Genera un número especificado
+ * de círculos y los anima en un loop hasta que se cierra la aplicación. Muestra FPS en
+ * el título de la ventana.
+ *
+ * @param argc Cantidad de argumentos de línea de comandos.
+ * @param argv Array de argumentos de línea de comandos. argv[1] debe ser el número de círculos a generar.
+ * @return int Retorna 0 si el programa finaliza correctamente, 1 si hay un error.
+ *
+ * @throws std::runtime_error si no se pueden inicializar los componentes de SDL o si el argumento es inválido.
+ */
 int main(int argc, char *argv[])
 {
   if (argc < 2)
