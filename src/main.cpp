@@ -2,6 +2,7 @@
 #include <SDL2/SDL2_gfxPrimitives.h>
 #include <iostream>
 #include <vector>
+#include <cstdlib> // Para usar atoi
 
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
@@ -14,8 +15,22 @@ struct Circle
   SDL_Color color; // Color
 };
 
-int main()
+int main(int argc, char *argv[])
 {
+  if (argc < 2)
+  {
+    std::cerr << "Usage: " << argv[0] << " <number_of_circles>" << std::endl;
+    return 1;
+  }
+
+  int numCircles = std::atoi(argv[1]); // Convertir el argumento a entero
+
+  if (numCircles <= 0)
+  {
+    std::cerr << "The number of circles should be a positive integer." << std::endl;
+    return 1;
+  }
+
   if (SDL_Init(SDL_INIT_VIDEO) != 0)
   {
     std::cerr << "Error al inicializar SDL: " << SDL_GetError() << std::endl;
@@ -40,7 +55,7 @@ int main()
   }
 
   std::vector<Circle> circles;
-  for (int i = 0; i < 5; i++)
+  for (int i = 0; i < numCircles; i++)
   {
     Circle c;
     c.x = rand() % WINDOW_WIDTH;
@@ -92,7 +107,7 @@ int main()
       startTime += 1000;
     }
 
-    SDL_Delay(20); // Ajustar este valor según sea necesario para controlar la velocidad de la animación
+    SDL_Delay(20); // Control de velocidad de la animación
   }
 
   SDL_DestroyRenderer(renderer);
