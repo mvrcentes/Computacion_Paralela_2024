@@ -63,12 +63,11 @@ int main(int argc, char *argv[])
     circles[i].color = {Uint8(rand() % 256), Uint8(rand() % 256), Uint8(rand() % 256), 255};
   }
 
-  Uint64 startTick, lastUpdate = SDL_GetPerformanceCounter();
+  Uint64 startTick, endTick;
   double deltaTime, fps;
   bool running = true;
   SDL_Event event;
-  char title[100];
-  unsigned frameCount = 0;
+  char fpsText[50];
 
   while (running)
   {
@@ -105,20 +104,13 @@ int main(int argc, char *argv[])
       filledCircleRGBA(renderer, circle.x, circle.y, circle.radius, circle.color.r, circle.color.g, circle.color.b, circle.color.a);
     }
 
-    SDL_RenderPresent(renderer);
-    frameCount++;
-
-    Uint64 endTick = SDL_GetPerformanceCounter();
+    endTick = SDL_GetPerformanceCounter();
     deltaTime = (double)(endTick - startTick) / SDL_GetPerformanceFrequency();
-    Uint64 elapsedMS = (endTick - lastUpdate) * 1000 / SDL_GetPerformanceFrequency();
-    if (elapsedMS > 1000)
-    {
-      fps = frameCount / (elapsedMS / 1000.0);
-      snprintf(title, sizeof(title), "Parallel Screensaver - FPS: %.2f", fps);
-      SDL_SetWindowTitle(window, title);
-      frameCount = 0;
-      lastUpdate = endTick;
-    }
+    fps = 1.0 / deltaTime;
+    sprintf(fpsText, "FPS: %.2f", fps);
+    stringRGBA(renderer, 10, 10, fpsText, 255, 255, 255, 255);
+
+    SDL_RenderPresent(renderer);
   }
 
   SDL_DestroyRenderer(renderer);
