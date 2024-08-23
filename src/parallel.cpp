@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdlib>
 #include <omp.h>
+#include <string>
 
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
@@ -25,7 +26,7 @@ int main(int argc, char *argv[])
   }
 
   int numCircles = std::atoi(argv[1]);
-  omp_set_num_threads(4); // Control de hilos: usar 4 hilos para la ejecución paralela
+  omp_set_num_threads(4);
 
   if (SDL_Init(SDL_INIT_VIDEO) != 0)
   {
@@ -51,6 +52,7 @@ int main(int argc, char *argv[])
   }
 
   std::vector<Circle> circles(numCircles);
+#pragma omp parallel for
   for (int i = 0; i < numCircles; i++)
   {
     circles[i].x = rand() % WINDOW_WIDTH;
@@ -61,12 +63,17 @@ int main(int argc, char *argv[])
     circles[i].color = {Uint8(rand() % 256), Uint8(rand() % 256), Uint8(rand() % 256), 255};
   }
 
+  Uint64 startTick, lastUpdate = SDL_GetPerformanceCounter();
+  double deltaTime, fps;
   bool running = true;
   SDL_Event event;
-  uint32_t startTime = SDL_GetTicks(), frameCount = 0;
+  char title[100];
+  unsigned frameCount = 0;
 
   while (running)
   {
+    startTick = SDL_GetPerformanceCounter();
+
     while (SDL_PollEvent(&event))
     {
       if (event.type == SDL_QUIT)
@@ -75,42 +82,43 @@ int main(int argc, char *argv[])
       }
     }
 
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+
 #pragma omp parallel for
     for (int i = 0; i < numCircles; i++)
     {
-      float newX = circles[i].x + circles[i].dx;
-      float newY = circles[i].y + circles[i].dy;
-      if (newX - circles[i].radius < 0 || newX + circles[i].radius > WINDOW_WIDTH)
+      circles[i].x += circles[i].dx;
+      circles[i].y += circles[i].dy;
+      if (circles[i].x - circles[i].radius < 0 || circles[i].x + circles[i].radius > WINDOW_WIDTH)
       {
         circles[i].dx *= -1;
       }
-      if (newY - circles[i].radius < 0 || newY + circles[i].radius > WINDOW_HEIGHT)
+      if (circles[i].y - circles[i].radius < 0 || circles[i].y + circles[i].radius > WINDOW_HEIGHT)
       {
         circles[i].dy *= -1;
       }
-      circles[i].x = newX;
-      circles[i].y = newY;
     }
 
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
     for (const auto &circle : circles)
     {
       filledCircleRGBA(renderer, circle.x, circle.y, circle.radius, circle.color.r, circle.color.g, circle.color.b, circle.color.a);
     }
-    SDL_RenderPresent(renderer);
 
+    SDL_RenderPresent(renderer);
     frameCount++;
-    if (SDL_GetTicks() - startTime >= 1000)
+
+    Uint64 endTick = SDL_GetPerformanceCounter();
+    deltaTime = (double)(endTick - startTick) / SDL_GetPerformanceFrequency();
+    Uint64 elapsedMS = (endTick - lastUpdate) * 1000 / SDL_GetPerformanceFrequency();
+    if (elapsedMS > 1000)
     {
-      char title[100];
-      snprintf(title, 100, "Screensaver - FPS: %d", frameCount);
+      fps = frameCount / (elapsedMS / 1000.0);
+      snprintf(title, sizeof(title), "Parallel Screensaver - FPS: %.2f", fps);
       SDL_SetWindowTitle(window, title);
       frameCount = 0;
-      startTime = SDL_GetTicks();
+      lastUpdate = endTick;
     }
-
-    SDL_Delay(16); // Targeting approximately 60 FPS
   }
 
   SDL_DestroyRenderer(renderer);
