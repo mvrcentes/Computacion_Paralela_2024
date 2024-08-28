@@ -1,10 +1,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
-#include <SDL2/SDL_ttf.h>
 #include <iostream>
 #include <vector>
 #include <cstdlib>
-#include <omp.h>
 #include <cmath>
 #include <string>
 
@@ -35,21 +33,18 @@ void handleCollision(Circle &a, Circle &b) {
     if (dist < a.radius + b.radius) {
         if (a.radius > 10) a.radius -= 1;
         if (b.radius < 50) b.radius += 1;
-        // Encontrar los vectores de colisión
+
         float nx = (b.x - a.x) / dist;
         float ny = (b.y - a.y) / dist;
 
-        // Proyectar las velocidades en el vector de colisión
         float p = 2 * (a.dx * nx + a.dy * ny - b.dx * nx - b.dy * ny) / 2;
 
-        // Actualizar las velocidades de los círculos
         a.dx -= p * nx;
         a.dy -= p * ny;
         b.dx += p * nx;
         b.dy += p * ny;
 
-        // Mantener la velocidad dentro de un rango específico
-        float speedLimit = 0.5; // Límite superior de velocidad
+        float speedLimit = 0.5;
         float aSpeed = std::sqrt(a.dx * a.dx + a.dy * a.dy);
         float bSpeed = std::sqrt(b.dx * b.dx + b.dy * b.dy);
 
@@ -65,38 +60,35 @@ void handleCollision(Circle &a, Circle &b) {
             b.dy *= scale;
         }
 
-        // Separar los círculos para evitar solapamiento
         float overlap = 0.5f * (a.radius + b.radius - dist);
         a.x -= overlap * nx;
         a.y -= overlap * ny;
         b.x += overlap * nx;
         b.y += overlap * ny;
 
-        // Cambiar los colores de los círculos después de la colisión
-        #pragma omp critical  // Sección crítica para evitar condiciones de carrera
-        {
-            a.color = getRandomColor();
-            b.color = getRandomColor();
-        }
+        a.color = getRandomColor();
+        b.color = getRandomColor();
     }
 }
 
 void applyForces(std::vector<Circle> &circles) {
-    float forceStrength = 0.01f; // Ajustar la intensidad de la fuerza
-    
-    #pragma omp parallel for
-    for (int i = 0; i < circles.size(); i++) {
-        for (int j = i + 1; j < circles.size(); j++) {
-            float dist = distance(circles[i].x, circles[i].y, circles[j].x, circles[j].y);
-            if (dist > 0 && dist < 200) { // Solo considerar círculos dentro de un cierto rango
-                float force = forceStrength / dist;
-                float nx = (circles[j].x - circles[i].x) / dist;
-                float ny = (circles[j].y - circles[i].y) / dist;
+    float forceStrength = 0.01f;
 
-                circles[i].dx -= force * nx;
-                circles[i].dy -= force * ny;
-                circles[j].dx += force * nx;
-                circles[j].dy += force * ny;
+    for (int i = 0; i < circles.size(); i++) {
+        Circle& ci = circles[i];
+        for (int j = i + 1; j < circles.size(); j++) {
+            Circle& cj = circles[j];
+            float dist = distance(ci.x, ci.y, cj.x, cj.y);
+            if (dist > 0 && dist < 200) {
+                float force = forceStrength / dist;
+                float nx = (cj.x - ci.x) / dist;
+                float ny = (cj.y - ci.y) / dist;
+
+                ci.dx -= force * nx;
+                ci.dy -= force * ny;
+
+                cj.dx += force * nx;
+                cj.dy += force * ny;
             }
         }
     }
@@ -107,7 +99,6 @@ void attractToCenter(std::vector<Circle> &circles) {
     float centerY = WINDOW_HEIGHT / 2.0f;
     float attractionStrength = 0.01f;
 
-    #pragma omp parallel for
     for (int i = 0; i < circles.size(); i++) {
         float dist = distance(circles[i].x, circles[i].y, centerX, centerY);
         float nx = (centerX - circles[i].x) / dist;
@@ -136,7 +127,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    SDL_Window *window = SDL_CreateWindow("Sequential", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+    SDL_Window *window = SDL_CreateWindow("Sequential Screensaver", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
     if (!window) {
         std::cerr << "Error creating window: " << SDL_GetError() << std::endl;
         SDL_Quit();
@@ -173,20 +164,16 @@ int main(int argc, char *argv[]) {
     const double attractToCenterInterval = 1.0;  // Intervalo de tiempo para la función attractToCenter (en segundos)
     double elapsed = 0.0;  // Tiempo transcurrido desde el último cambio
 
-    // Establecer el tiempo inicial
     startTick = SDL_GetPerformanceCounter();
-    
-    // Indica qué función aplicar actualmente
     bool applyForcesEnabled = true;
 
     while (running) {
         currentTick = SDL_GetPerformanceCounter();
         deltaTime = (double)(currentTick - startTick) / SDL_GetPerformanceFrequency();
         
-        // Cambiar función según el intervalo de tiempo
         if (elapsed >= (applyForcesEnabled ? applyForcesInterval : attractToCenterInterval)) {
-            applyForcesEnabled = !applyForcesEnabled;  // Alternar la función
-            elapsed = 0.0;  // Reiniciar el temporizador
+            applyForcesEnabled = !applyForcesEnabled;
+            elapsed = 0.0;
         }
 
         while (SDL_PollEvent(&event)) {
@@ -200,8 +187,6 @@ int main(int argc, char *argv[]) {
 
         applyForces(circles);
 
-        // Actualizar posiciones
-      
         for (int i = 0; i < numCircles; i++) {
             circles[i].x += circles[i].dx;
             circles[i].y += circles[i].dy;
@@ -213,35 +198,35 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        // Detectar y manejar colisiones
-       
         for (int i = 0; i < numCircles; i++) {
             for (int j = i + 1; j < numCircles; j++) {
                 handleCollision(circles[i], circles[j]);
             }
         }
 
-        // Renderizado secuencial
         for (const auto &circle : circles) {
-            if (circle.radius > 0) { // Solo renderizar círculos con radio positivo
+            if (circle.radius > 0) {
                 filledCircleRGBA(renderer, circle.x, circle.y, circle.radius, circle.color.r, circle.color.g, circle.color.b, circle.color.a);
             }
         }
 
-        // Actualizar el tiempo transcurrido
         elapsed += deltaTime;
 
-        // Mostrar FPS
-        sprintf(fpsText, "FPS: %.2f", 1.0 / deltaTime);
+        if (deltaTime > 0) {
+            sprintf(fpsText, "FPS: %.2f", 1.0 / deltaTime);
+        } else {
+            sprintf(fpsText, "FPS: --");
+        }
+
         stringRGBA(renderer, 10, 10, fpsText, 255, 255, 255, 255);
 
         SDL_RenderPresent(renderer);
 
-        // Actualizar el tiempo de inicio
         startTick = currentTick;
     }
 
-     SDL_Delay(16); // Aproximadamente 60 FPS
+    SDL_Delay(16);
+
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

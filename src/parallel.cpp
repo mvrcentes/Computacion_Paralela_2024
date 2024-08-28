@@ -209,12 +209,7 @@
 
                 SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
                 SDL_RenderClear(renderer);
-
-                #pragma omp parallel sections
-            {
-                #pragma omp section
-                applyForces(circles);     // Interacción de atracción/repulsión
-            }
+                applyForces(circles);
 
                 // Actualizar posiciones
                 #pragma omp parallel for schedule(dynamic)
