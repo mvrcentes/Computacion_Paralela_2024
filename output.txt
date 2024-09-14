@@ -1,0 +1,6 @@
+Key: 57920
+Encrypted text: |�U7V�@�sn)��!3/p�m���<�`���פt�u������
+��FX'dK܇E���c��W%�V�a+��GzVF��
+�H�5~��:��C������}_,�ZV��Y�u��
+Decrypted text: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+Time to decrypt: 0.080261 seconds
