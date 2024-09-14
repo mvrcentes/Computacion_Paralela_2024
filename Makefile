@@ -1,36 +1,27 @@
-# Definición de variables
-CC=clang++  # Usar clang++
-CFLAGS=-std=c++11 -Wall -Xpreprocessor -fopenmp -I/opt/homebrew/include -I/opt/homebrew/Cellar/libomp/18.1.8/include
-LDFLAGS=-L/opt/homebrew/lib -lSDL2 -lSDL2_gfx -L/opt/homebrew/Cellar/libomp/18.1.8/lib -lomp
-SRC_DIR=src
-BUILD_DIR=build
+CC = mpicc
+CFLAGS = -Wall -O2 -Wno-deprecated-declarations
+LIBS = -lcrypto
+OPENSSL_PATH = /opt/homebrew/opt/openssl@3
 
-# Asegúrate de que el directorio build exista
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+# Include paths for headers and library paths for linker
+INCLUDES = -I$(OPENSSL_PATH)/include
+LDFLAGS = -L$(OPENSSL_PATH)/lib
 
-# Compilar el proyecto para main.cpp
-screensaver_main: $(BUILD_DIR)/screensaver_main
+# Name of the executable
+EXECUTABLE = my_program
 
-$(BUILD_DIR)/screensaver_main: $(SRC_DIR)/main.cpp | $(BUILD_DIR)
-	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)
+# Source file
+SOURCE = bruteforce00.c
 
-# Compilar el proyecto para parallel.cpp
-screensaver_parallel: $(BUILD_DIR)/screensaver_parallel
+# Default target
+all: $(EXECUTABLE)
 
-$(BUILD_DIR)/screensaver_parallel: $(SRC_DIR)/parallel.cpp | $(BUILD_DIR)
-	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)
+$(EXECUTABLE): $(SOURCE)
+	$(CC) -o $@ $^ $(CFLAGS) $(INCLUDES) $(LDFLAGS) $(LIBS)
 
-# Limpiar archivos compilados
 clean:
-	rm -f $(BUILD_DIR)/*
+	rm -f $(EXECUTABLE)
 
-# Ejecutar los programas
-run_main: screensaver_main
-	./$(BUILD_DIR)/screensaver_main
-
-run_parallel: screensaver_parallel
-	./$(BUILD_DIR)/screensaver_parallel
-
-# Objetivo por defecto
-all: screensaver_main screensaver_parallel
+# To execute, you can add a run rule if necessary
+run:
+	mpirun -np 6 ./$(EXECUTABLE) input1.txt output1.txt 123456L "dolor sit amet"
