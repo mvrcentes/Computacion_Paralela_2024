@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     const char *searchPhrase = argv[4];
     char plaintext[1024], decrypted[1024];
     unsigned char ciphertext[1024];
-    int len, found = 0;
+    int len, global_found = 0;
 
     double startTime = MPI_Wtime();
 
@@ -79,12 +79,13 @@ int main(int argc, char *argv[])
     if (my_rank == num_procs - 1)
         keyEnd = 72057594037927935L; // Last process takes any remainder
 
-    for (long key = keyStart; !found && key < keyEnd; key++)
+    for (long key = keyStart; !global_found && key < keyEnd; key++)
     {
         if (decrypt(ciphertext, key, decrypted, len, searchPhrase))
         {
             double endTime = MPI_Wtime();
-            found = 1;
+            global_found = 1;
+            MPI_Bcast(&global_found, 1, MPI_INT, my_rank, MPI_COMM_WORLD); // Inform other processes
             if (my_rank == 0)
             {
                 FILE *fp = fopen(outputFile, "w");

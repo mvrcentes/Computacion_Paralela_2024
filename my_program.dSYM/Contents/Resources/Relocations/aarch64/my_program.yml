@@ -2,9 +2,9 @@
 triple:          'arm64-apple-darwin'
 binary-path:     my_program
 relocations:
-  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _encrypt, symObjAddr: 0x0, symBinAddr: 0x10000393C, symSize: 0x9C }
-  - { offsetInCU: 0x82, offset: 0x82, size: 0x8, addend: 0x0, symName: _encrypt, symObjAddr: 0x0, symBinAddr: 0x10000393C, symSize: 0x9C }
-  - { offsetInCU: 0x1BE, offset: 0x1BE, size: 0x8, addend: 0x0, symName: _decrypt, symObjAddr: 0x9C, symBinAddr: 0x1000039D8, symSize: 0xC0 }
-  - { offsetInCU: 0x33D, offset: 0x33D, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x15C, symBinAddr: 0x100003A98, symSize: 0x300 }
-  - { offsetInCU: 0x98B, offset: 0x98B, size: 0x8, addend: 0x0, symName: _main.cold.1, symObjAddr: 0x45C, symBinAddr: 0x100003D98, symSize: 0x28 }
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _encrypt, symObjAddr: 0x0, symBinAddr: 0x1000038F8, symSize: 0x9C }
+  - { offsetInCU: 0x82, offset: 0x82, size: 0x8, addend: 0x0, symName: _encrypt, symObjAddr: 0x0, symBinAddr: 0x1000038F8, symSize: 0x9C }
+  - { offsetInCU: 0x1BE, offset: 0x1BE, size: 0x8, addend: 0x0, symName: _decrypt, symObjAddr: 0x9C, symBinAddr: 0x100003994, symSize: 0xC0 }
+  - { offsetInCU: 0x33D, offset: 0x33D, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x15C, symBinAddr: 0x100003A54, symSize: 0x344 }
+  - { offsetInCU: 0x9B6, offset: 0x9B6, size: 0x8, addend: 0x0, symName: _main.cold.1, symObjAddr: 0x4A0, symBinAddr: 0x100003D98, symSize: 0x28 }
 ...
