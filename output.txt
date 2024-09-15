@@ -1,6 +1,6 @@
 Key: 57920
-Encrypted text: |ï¿½U7Vï¿½@ï¿½sn)ï¿½ï¿½!3/pï¿½mï¿½ï¿½ï¿½<ï¿½`ï¿½ï¿½ï¿½×¤tï¿½uï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-ï¿½ï¿½FX'dKÜ‡Eï¿½ï¿½ï¿½cï¿½ï¿½W%ï¿½Vï¿½a+ï¿½ï¿½GzVFï¿½ï¿½
-ï¿½Hï¿½5~ï¿½ï¿½:ï¿½ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½}_,ï¿½ZVï¿½ï¿½Yï¿½uï¿½ï¿½
+Encrypted text: |ÃU7V@Œsn)¡¦!3/pÅm«îó<¿`¾¡Ó×¤t€u¯üíçÑë
+¡FX'dKÜ‡EÁå¢òc‚†W%²Va+ŸÐGzVF©­
+ÙH…5~Œ:íËC³²—ù•¯}_,ìZVõ€Yu—ð
 Decrypted text: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-Time to decrypt: 0.080261 seconds
+Time to decrypt: 0.078502 seconds
