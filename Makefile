@@ -29,7 +29,7 @@ clean:
 	rm -f $(EXECUTABLE_PARALLEL) $(EXECUTABLE_SEQUENTIAL)
 
 run_parallel:
-	mpirun -np 6 ./$(EXECUTABLE_PARALLEL) input1.txt output1.txt 123456L "dolor sit amet"
+	mpirun -np 6 ./$(EXECUTABLE_PARALLEL) ./text-files/medium.txt output1.txt 5000 "mundo"
 
 run_sequential:
-	./$(EXECUTABLE_SEQUENTIAL) input.txt output.txt 123456L "dolor sit amet"
+	./$(EXECUTABLE_SEQUENTIAL) ./text-files/medium.txt output.txt 5000 "mundo"

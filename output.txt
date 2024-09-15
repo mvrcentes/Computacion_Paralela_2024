@@ -1,6 +1,4 @@
-Key: 57920
-Encrypted text: |ÃU7V@Œsn)¡¦!3/pÅm«îó<¿`¾¡Ó×¤t€u¯üíçÑë
-¡FX'dKÜ‡EÁå¢òc‚†W%²Va+ŸĞGzVF©­
-ÙH…5~Œ:íËC³²—ù•¯}_,ìZVõ€Yu—ğ
-Decrypted text: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-Time to decrypt: 0.078502 seconds
+Key: 4744
+Encrypted text: š’»~y¾nĞ]'ËëÿÇz:¢Lã‰¤i(8÷–ºI.4–’Æl €K$v
+Decrypted text: Bienvenido al mundo del descifrado
+Time to decrypt: 0.002241 seconds
