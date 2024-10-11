@@ -8,7 +8,7 @@
 void add_padding(unsigned char *input, int *len) {
     int padding = 8 - (*len % 8);
     for (int i = 0; i < padding; ++i) {
-        input[*len + i] = padding; // Fill with the number of padding bytes
+        input[*len + i] = padding; 
     }
     *len += padding;
 }
@@ -56,27 +56,27 @@ void encrypt_message(long key, unsigned char *ciph, int *len) {
 int tryKey(long key, unsigned char *ciph, int len, const char *search) {
     unsigned char temp[len + 1];
     memcpy(temp, ciph, len);
-    temp[len] = 0; // Ensure the string is null-terminated
+    temp[len] = 0; 
 
     decrypt_message(key, temp, &len);
-    temp[len] = '\0'; // Explicitly null-terminate the decrypted string
+    temp[len] = '\0'; 
 
     if (strstr((char *)temp, search) != NULL) {
-        return 1; // Key found
+        return 1; 
     }
-    return 0; // Key not found
+    return 0; 
 }
 
 int main(int argc, char *argv[]) {
     if (argc != 5) {
-        fprintf(stderr, "Usage: %s <file> <key> <search_string> <divisions>\n", argv[0]);
+        fprintf(stderr, "Uso: %s <archivo> <clave> <cadena_búsqueda> <divisiones>\n", argv[0]);
         return EXIT_FAILURE;
     }
 
     char *filename = argv[1];
     long key = atol(argv[2]);
     char *search = argv[3];
-    int divisions = atoi(argv[4]); // Number of divisions (3 or 5)
+    int divisions = atoi(argv[4]); 
 
     int N, id, flag;
     MPI_Comm comm = MPI_COMM_WORLD;
@@ -84,10 +84,9 @@ int main(int argc, char *argv[]) {
     MPI_Comm_size(comm, &N);
     MPI_Comm_rank(comm, &id);
 
-    // Read the content of the file
     FILE *file = fopen(filename, "rb");
     if (!file) {
-        perror("Could not open the file");
+        perror("No se pudo abrir el archivo");
         MPI_Finalize();
         return EXIT_FAILURE;
     }
@@ -99,11 +98,10 @@ int main(int argc, char *argv[]) {
     fread(plaintext, 1, filesize, file);
     fclose(file);
 
-    unsigned char *cipher = malloc(filesize + 8); // +8 for padding
+    unsigned char *cipher = malloc(filesize + 8); 
     int ciphlen = filesize;
     memcpy(cipher, plaintext, ciphlen);
 
-    // Encrypt the message with the provided key
     encrypt_message(key, cipher, &ciphlen);
 
     long upper = (1L << 56);
@@ -112,13 +110,12 @@ int main(int argc, char *argv[]) {
     if (id == N - 1) {
         myupper = upper;
     }
-    printf("Process %d is responsible for key range: [%li - %li]\n", id, mylower, myupper);
+    printf("Proceso %d encargado del rango de claves: [%li - %li]\n", id, mylower, myupper);
     
     long found = -1;
     int key_found = 0; 
     double start_time = MPI_Wtime(); 
 
-    // Divide range into 3 or 5 blocks and iterate alternately over these blocks
     long range_per_division = (myupper - mylower + 1) / divisions;
     long ranges[divisions][2];
     
@@ -129,7 +126,6 @@ int main(int argc, char *argv[]) {
 
     for (long i = 0; ; i++) {
         for (int j = 0; j < divisions; j++) {
-            // Alternate between start and end of the block
             long candidate;
             if (i % 2 == 0) {
                 candidate = ranges[j][0] + i / 2;
@@ -137,7 +133,7 @@ int main(int argc, char *argv[]) {
                 candidate = ranges[j][1] - i / 2;
             }
 
-            if (candidate < ranges[j][0] || candidate > ranges[j][1]) continue; // Skip if out of bounds
+            if (candidate < ranges[j][0] || candidate > ranges[j][1]) continue; 
 
             MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, comm, &flag, MPI_STATUS_IGNORE);
             if (flag) { 
@@ -161,11 +157,14 @@ int main(int argc, char *argv[]) {
 
     if (found != -1) {
         double end_time = MPI_Wtime();
-        printf("Key found: %li by process %d\n", found, id);
+        printf("\n========================================\n");
+        printf("¡Llave encontrada por el proceso %d!\n", id);
+        printf("Llave: %li\n", found);
         decrypt_message(found, cipher, &ciphlen);
         cipher[ciphlen] = '\0'; 
-        printf("Decrypted text: %s\n", cipher);
-        printf("Decryption time: %f seconds\n", end_time - start_time);
+        printf("Texto descifrado: %s\n", cipher);
+        printf("Tiempo total de descifrado: %.2f segundos\n", end_time - start_time);
+        printf("========================================\n");
     }
 
     free(plaintext);
@@ -173,4 +172,3 @@ int main(int argc, char *argv[]) {
     MPI_Finalize();
     return EXIT_SUCCESS;
 }
-gi

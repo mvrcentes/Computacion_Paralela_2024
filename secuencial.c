@@ -62,13 +62,18 @@ int main() {
 
     if (found) {
         decrypt(found, (char *)cipher, ciphlen);
-        printf("Key found: %li, Decrypted text: %s\n", found, cipher);
+        printf("\n========================================\n");
+        printf("¡Llave encontrada!\n");
+        printf("Llave: %li\n", found);
+        printf("Texto descifrado: %s\n", cipher);
+        printf("Tiempo total: %.2f segundos\n", time_spent);
+        printf("========================================\n");
     } else {
-        printf("Key not found.\n");
+        printf("\n========================================\n");
+        printf("Llave no encontrada.\n");
+        printf("Tiempo total: %.2f segundos\n", time_spent);
+        printf("========================================\n");
     }
-
-    // Imprimir el tiempo transcurrido
-    printf("Time taken: %.2f seconds\n", time_spent);
 
     return 0;
 }

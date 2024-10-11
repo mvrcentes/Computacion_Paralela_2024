@@ -8,7 +8,7 @@
 void add_padding(unsigned char *input, int *len) {
     int padding = 8 - (*len % 8);
     for (int i = 0; i < padding; ++i) {
-        input[*len + i] = padding; // Fill with the number of padding bytes
+        input[*len + i] = padding; // Rellenar con la cantidad de bytes de padding
     }
     *len += padding;
 }
@@ -56,20 +56,20 @@ void encrypt_message(long key, unsigned char *ciph, int *len) {
 int tryKey(long key, unsigned char *ciph, int len, const char *search) {
     unsigned char temp[len + 1];
     memcpy(temp, ciph, len);
-    temp[len] = 0; // Ensure the string is null-terminated
+    temp[len] = 0; // Asegurar que la cadena esté terminada en nulo
 
     decrypt_message(key, temp, &len);
-    temp[len] = '\0'; // Explicitly null-terminate the decrypted string
+    temp[len] = '\0'; // Terminar la cadena descifrada explícitamente
 
     if (strstr((char *)temp, search) != NULL) {
-        return 1; // Key found
+        return 1; // Llave encontrada
     }
-    return 0; // Key not found
+    return 0; // Llave no encontrada
 }
 
 int main(int argc, char *argv[]) {
     if (argc != 4) {
-        fprintf(stderr, "Usage: %s <file> <key> <search_string>\n", argv[0]);
+        fprintf(stderr, "Uso: %s <archivo> <llave> <cadena_a_buscar>\n", argv[0]);
         return EXIT_FAILURE;
     }
 
@@ -83,10 +83,10 @@ int main(int argc, char *argv[]) {
     MPI_Comm_size(comm, &N);
     MPI_Comm_rank(comm, &id);
 
-    // Read the content of the file
+    // Leer el contenido del archivo
     FILE *file = fopen(filename, "rb");
     if (!file) {
-        perror("Could not open the file");
+        perror("No se pudo abrir el archivo");
         MPI_Finalize();
         return EXIT_FAILURE;
     }
@@ -98,11 +98,11 @@ int main(int argc, char *argv[]) {
     fread(plaintext, 1, filesize, file);
     fclose(file);
 
-    unsigned char *cipher = malloc(filesize + 8); // +8 for padding
+    unsigned char *cipher = malloc(filesize + 8); // +8 para el padding
     int ciphlen = filesize;
     memcpy(cipher, plaintext, ciphlen);
 
-    // Encrypt the message with the provided key
+    // Cifrar el mensaje con la llave proporcionada
     encrypt_message(key, cipher, &ciphlen);
 
     long upper = (1L << 56);
@@ -111,38 +111,43 @@ int main(int argc, char *argv[]) {
     if (id == N - 1) {
         myupper = upper;
     }
-    printf("Process %d is responsible for key range: [%li - %li]\n", id, mylower, myupper);
-    long found = -1; // Initialize as -1 to indicate that no key has been found
-    int key_found = 0; // Flag to indicate if the key is found
-    double start_time = MPI_Wtime(); // Start timing
 
-    // Loop to search for the key
+    printf("Proceso %d está buscando en el rango de llaves: [%li - %li]\n", id, mylower, myupper);
+
+    long found = -1; // Inicializar como -1 para indicar que no se ha encontrado la llave
+    int key_found = 0; // Bandera para indicar si se ha encontrado la llave
+    double start_time = MPI_Wtime(); // Iniciar cronómetro
+
+    // Bucle para buscar la llave
     for (long i = mylower; i <= myupper; ++i) {
         MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, comm, &flag, MPI_STATUS_IGNORE);
-        if (flag) { // Check if a key has been found
+        if (flag) { // Revisar si alguna llave ha sido encontrada
             MPI_Recv(&key_found, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, comm, MPI_STATUS_IGNORE);
             if (key_found) {
-                break; // Exit if a key has already been found
+                break; // Salir si una llave ya ha sido encontrada
             }
         }
 
         if (tryKey(i, cipher, ciphlen, search)) {
-            found = i; // Key found
-            key_found = 1; // Set the key_found flag
+            found = i; // Llave encontrada
+            key_found = 1; // Cambiar la bandera a que la llave ha sido encontrada
             for (int j = 0; j < N; ++j) {
-                MPI_Send(&key_found, 1, MPI_INT, j, 0, comm); // Inform all processes
+                MPI_Send(&key_found, 1, MPI_INT, j, 0, comm); // Informar a todos los procesos
             }
             break;
         }
     }
 
     if (found != -1) {
-        double end_time = MPI_Wtime(); // End timing
-        printf("Key found: %li by process %d\n", found, id);
+        double end_time = MPI_Wtime(); // Terminar cronómetro
+        printf("\n====================================================\n");
+        printf("¡Llave encontrada!\n");
+        printf("Llave: %li, encontrada por el proceso %d\n", found, id);
         decrypt_message(found, cipher, &ciphlen);
-        cipher[ciphlen] = '\0'; // Ensure null-terminated string
-        printf("Decrypted text: %s\n", cipher);
-        printf("Decryption time: %f seconds\n", end_time - start_time);
+        cipher[ciphlen] = '\0'; // Asegurar que la cadena descifrada esté terminada en nulo
+        printf("Texto descifrado: %s\n", cipher);
+        printf("Tiempo total de descifrado: %.4f segundos\n", end_time - start_time);
+        printf("====================================================\n");
     }
 
     free(plaintext);
