@@ -66,12 +66,12 @@ int main() {
         printf("¡Llave encontrada!\n");
         printf("Llave: %li\n", found);
         printf("Texto descifrado: %s\n", cipher);
-        printf("Tiempo total: %.2f segundos\n", time_spent);
+        printf("Tiempo total: %.10f segundos\n", time_spent);
         printf("========================================\n");
     } else {
         printf("\n========================================\n");
         printf("Llave no encontrada.\n");
-        printf("Tiempo total: %.2f segundos\n", time_spent);
+        printf("Tiempo total: %.10f segundos\n", time_spent);
         printf("========================================\n");
     }
 
