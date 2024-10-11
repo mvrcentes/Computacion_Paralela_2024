@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
         decrypt_message(found, cipher, &ciphlen);
         cipher[ciphlen] = '\0'; // Asegurar que la cadena descifrada esté terminada en nulo
         printf("Texto descifrado: %s\n", cipher);
-        printf("Tiempo total de descifrado: %.4f segundos\n", end_time - start_time);
+        printf("Tiempo total de descifrado: %.10f segundos\n", end_time - start_time);
         printf("====================================================\n");
     }
 
