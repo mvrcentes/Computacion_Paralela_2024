@@ -1,9 +1,0 @@
----
-triple:          'arm64-apple-darwin'
-binary-path:     my_program_sequential
-relocations:
-  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _encrypt, symObjAddr: 0x0, symBinAddr: 0x100003A2C, symSize: 0x9C }
-  - { offsetInCU: 0x82, offset: 0x82, size: 0x8, addend: 0x0, symName: _encrypt, symObjAddr: 0x0, symBinAddr: 0x100003A2C, symSize: 0x9C }
-  - { offsetInCU: 0x1C5, offset: 0x1C5, size: 0x8, addend: 0x0, symName: _decrypt, symObjAddr: 0x9C, symBinAddr: 0x100003AC8, symSize: 0xC0 }
-  - { offsetInCU: 0x344, offset: 0x344, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x15C, symBinAddr: 0x100003B88, symSize: 0x260 }
-...

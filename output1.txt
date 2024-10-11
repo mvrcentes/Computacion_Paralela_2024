@@ -1,4 +1,0 @@
-Key: 4744
-Encrypted text: š’»~y¾nĞ]'ËëÿÇz:¢Lã‰¤i(8÷–ºËÂ¸GÌ·5€$v
-Decrypted text: Bienvenido al mundo del descifrado
-Time to decrypt: 0.003922 seconds
