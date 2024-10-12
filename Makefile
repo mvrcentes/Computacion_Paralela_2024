@@ -44,15 +44,15 @@ $(TARGET_4): $(SRC_4)
 
 # Run naive with 4 processes
 run_alt1: $(TARGET_1)
-	mpirun --allow-run-as-root -np 4 ./$(TARGET_1) medium.txt 36028798018963968L "es una prueba de"
+	mpirun --allow-run-as-root -np 4 ./$(TARGET_1) medium.txt 18014398519481984 
 
 # Run naiveomp with 4 processes
 run_alt2: $(TARGET_2)
-	mpirun --allow-run-as-root -np 4 ./$(TARGET_2) medium.txt 36028798018963968L "es una prueba de"
+	mpirun --allow-run-as-root -np 4 ./$(TARGET_2) medium.txt 18014398519481984 "and typesetting industry"
 
 # Run dbloques with 4 processes
 run_div: $(TARGET_3)
-	mpirun --allow-run-as-root -n 4 ./$(TARGET_3) medium.txt 36028798018963968L "es una prueba de" 1
+	mpirun --allow-run-as-root -n 4 ./$(TARGET_3) medium.txt 18014398519481984 "and typesetting industry" 1
 
 # Run secuencial without MPI
 run_seq: $(TARGET_4)
