@@ -225,6 +225,13 @@ int main(int argc, char **argv) {
         drawLine(resultImage, w, h, line.r, line.theta);
     }
 
+    // Crear un objeto cv::Mat con la imagen resultante
+    cv::Mat imgMat(h, w, CV_8UC3, resultImage);
+
+    // Guardar la imagen en formato PNG
+    cv::imwrite("output_global.png", imgMat);
+    printf("Imagen con líneas guardada en 'output_global.png'\n");
+
     // Guardar resultados
     savePPM("output_global.ppm", resultImage, w, h);
     printf("Imagen con líneas guardada en 'output_global.ppm'\n");
