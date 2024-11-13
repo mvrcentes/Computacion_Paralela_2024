@@ -221,11 +221,11 @@ int main(int argc, char **argv) {
     }
 
     savePPM("constant_output.ppm", resultImage, w, h);
-    printf("Imagen guardada en 'output_hough.ppm'\n");
+    printf("Imagen 'output_hough.ppm' creada\n");
 
     cv::Mat imgMat(h, w, CV_8UC3, resultImage);
     cv::imwrite("constant_output.png", imgMat);
-    printf("Imagen guardada en 'output_hough.png'\n");
+    printf("Imagen 'output_hough.png' creada\n");
 
     free(h_hough);
     delete[] cpuht;

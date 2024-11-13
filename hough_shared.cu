@@ -22,8 +22,7 @@ struct Line {
 };
 
 // Función de Transformada de Hough en CPU
-void CPU_HoughTran(unsigned char *pic, int w, int h, int **acc)
-{
+void CPU_HoughTran(unsigned char *pic, int w, int h, int **acc) {
     double rMax = sqrt(1.0 * w * w + 1.0 * h * h) / 2.0;
     *acc = new int[rBins * degreeBins];
     memset(*acc, 0, sizeof(int) * rBins * degreeBins);
@@ -31,21 +30,16 @@ void CPU_HoughTran(unsigned char *pic, int w, int h, int **acc)
     int yCent = h / 2;
     double rScale = (2.0 * rMax) / rBins;
 
-    for (int i = 0; i < w; i++)
-    {
-        for (int j = 0; j < h; j++)
-        {
+    for (int i = 0; i < w; i++) {
+        for (int j = 0; j < h; j++) {
             int idx = j * w + i;
-            if (pic[idx] > 0)
-            {
+            if (pic[idx] > 0) {
                 int xCoord = i - xCent;
                 int yCoord = yCent - j;
-                for (int tIdx = 0; tIdx < degreeBins; tIdx++)
-                {
+                for (int tIdx = 0; tIdx < degreeBins; tIdx++) {
                     double r = xCoord * cos(tIdx * radInc) + yCoord * sin(tIdx * radInc);
                     int rIdx = (int)((r + rMax) / rScale + 0.5);
-                    if (rIdx >= 0 && rIdx < rBins)
-                    {
+                    if (rIdx >= 0 && rIdx < rBins) {
                         (*acc)[rIdx * degreeBins + tIdx]++;
                     }
                 }
@@ -55,17 +49,14 @@ void CPU_HoughTran(unsigned char *pic, int w, int h, int **acc)
 }
 
 // Kernel para Transformada de Hough en GPU usando memoria compartida
-__global__ void GPU_HoughTran_Shared(unsigned char *pic, int w, int h, int *acc, double rMax, double rScale)
-{
+__global__ void GPU_HoughTran_Shared(unsigned char *pic, int w, int h, int *acc, double rMax, double rScale) {
     extern __shared__ int localAcc[]; // Acumulador local en memoria compartida
 
     int gloID = blockIdx.x * blockDim.x + threadIdx.x;
     int tIdx = threadIdx.x;
 
-    if (tIdx < degreeBins)
-    {
-        for (int rIdx = 0; rIdx < rBins; rIdx++)
-        {
+    if (tIdx < degreeBins) {
+        for (int rIdx = 0; rIdx < rBins; rIdx++) {
             localAcc[rIdx * degreeBins + tIdx] = 0;
         }
     }
@@ -74,64 +65,51 @@ __global__ void GPU_HoughTran_Shared(unsigned char *pic, int w, int h, int *acc,
     int xCent = w / 2;
     int yCent = h / 2;
 
-    if (gloID < w * h && pic[gloID] > 0)
-    {
+    if (gloID < w * h && pic[gloID] > 0) {
         int xCoord = gloID % w - xCent;
         int yCoord = yCent - gloID / w;
 
-        for (int tIdx = 0; tIdx < degreeBins; tIdx++)
-        {
+        for (int tIdx = 0; tIdx < degreeBins; tIdx++) {
             double r = xCoord * d_Cos[tIdx] + yCoord * d_Sin[tIdx];
             int rIdx = (int)((r + rMax) / rScale + 0.5);
-            if (rIdx >= 0 && rIdx < rBins)
-            {
+            if (rIdx >= 0 && rIdx < rBins) {
                 atomicAdd(&localAcc[rIdx * degreeBins + tIdx], 1);
             }
         }
     }
     __syncthreads();
 
-    if (tIdx < degreeBins)
-    {
-        for (int rIdx = 0; rIdx < rBins; rIdx++)
-        {
+    if (tIdx < degreeBins) {
+        for (int rIdx = 0; rIdx < rBins; rIdx++) {
             atomicAdd(&acc[rIdx * degreeBins + tIdx], localAcc[rIdx * degreeBins + tIdx]);
         }
     }
 }
 
 // Función para dibujar una línea sobre la imagen en color
-void drawLine(unsigned char *image, int w, int h, double r, double theta)
-{
+void drawLine(unsigned char *image, int w, int h, double r, double theta) {
     int xCent = w / 2;
     int yCent = h / 2;
 
     double cosT = cos(theta);
     double sinT = sin(theta);
 
-    if (fabs(sinT) > 0.5)
-    {
-        for (int x = 0; x < w; x++)
-        {
+    if (fabs(sinT) > 0.5) {
+        for (int x = 0; x < w; x++) {
             double y = (r - (x - xCent) * cosT) / sinT;
             int yInt = yCent - (int)(y + 0.5);
-            if (yInt >= 0 && yInt < h)
-            {
+            if (yInt >= 0 && yInt < h) {
                 int idx = yInt * w + x;
                 image[3 * idx] = 0;     
                 image[3 * idx + 1] = 255;   
                 image[3 * idx + 2] = 255;   
             }
         }
-    }
-    else
-    {
-        for (int y = 0; y < h; y++)
-        {
+    } else {
+        for (int y = 0; y < h; y++) {
             double x = (r - (yCent - y) * sinT) / cosT;
             int xInt = (int)(x + xCent + 0.5);
-            if (xInt >= 0 && xInt < w)
-            {
+            if (xInt >= 0 && xInt < w) {
                 int idx = y * w + xInt;
                 image[3 * idx] = 0;
                 image[3 * idx + 1] = 255;
@@ -142,11 +120,9 @@ void drawLine(unsigned char *image, int w, int h, double r, double theta)
 }
 
 // Función para guardar la imagen en formato PPM (color)
-void savePPM(const char *filename, unsigned char *image, int w, int h)
-{
+void savePPM(const char *filename, unsigned char *image, int w, int h) {
     FILE *fp = fopen(filename, "wb");
-    if (!fp)
-    {
+    if (!fp) {
         printf("Error al abrir el archivo para escribir: %s\n", filename);
         return;
     }
@@ -155,10 +131,8 @@ void savePPM(const char *filename, unsigned char *image, int w, int h)
     fclose(fp);
 }
 
-int main(int argc, char **argv)
-{
-    if (argc < 2)
-    {
+int main(int argc, char **argv) {
+    if (argc < 2) {
         printf("Uso: %s <imagen.pgm>\n", argv[0]);
         return -1;
     }
@@ -175,8 +149,7 @@ int main(int argc, char **argv)
     double *pcCos = (double *)malloc(sizeof(double) * degreeBins);
     double *pcSin = (double *)malloc(sizeof(double) * degreeBins);
     double theta = 0.0;
-    for (int i = 0; i < degreeBins; i++)
-    {
+    for (int i = 0; i < degreeBins; i++) {
         thetaValues[i] = theta;
         pcCos[i] = cos(theta);
         pcSin[i] = sin(theta);
@@ -201,7 +174,19 @@ int main(int argc, char **argv)
     int blockNum = (w * h + threadsPerBlock - 1) / threadsPerBlock;
     size_t sharedMemSize = degreeBins * rBins * sizeof(int);
 
+    // Medición de tiempo en GPU
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start);
+
     GPU_HoughTran_Shared<<<blockNum, threadsPerBlock, sharedMemSize>>>(d_in, w, h, d_hough, rMax, rScale);
+
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    float elapsedTime;
+    cudaEventElapsedTime(&elapsedTime, start, stop);
+    printf("Tiempo en GPU: %f ms\n", elapsedTime);
 
     int *h_hough = (int *)malloc(degreeBins * rBins * sizeof(int));
     cudaMemcpy(h_hough, d_hough, sizeof(int) * degreeBins * rBins, cudaMemcpyDeviceToHost);
@@ -212,8 +197,7 @@ int main(int argc, char **argv)
     double sum = 0.0;
     double sumSq = 0.0;
     int total = degreeBins * rBins;
-    for (int i = 0; i < total; i++)
-    {
+    for (int i = 0; i < total; i++) {
         sum += h_hough[i];
         sumSq += h_hough[i] * h_hough[i];
     }
@@ -223,13 +207,10 @@ int main(int argc, char **argv)
 
     // Almacenar líneas con peso mayor al umbral
     std::vector<Line> lines;
-    for (int rIdx = 0; rIdx < rBins; rIdx++)
-    {
-        for (int tIdx = 0; tIdx < degreeBins; tIdx++)
-        {
+    for (int rIdx = 0; rIdx < rBins; rIdx++) {
+        for (int tIdx = 0; tIdx < degreeBins; tIdx++) {
             int idx = rIdx * degreeBins + tIdx;
-            if (h_hough[idx] > threshold)
-            {
+            if (h_hough[idx] > threshold) {
                 double r = rIdx * rScale - rMax;
                 double theta = thetaValues[tIdx];
                 Line line = {r, theta};
@@ -241,25 +222,23 @@ int main(int argc, char **argv)
     printf("Cantidad de líneas detectadas: %lu\n", lines.size());
 
     unsigned char *resultImage = (unsigned char *)malloc(w * h * 3 * sizeof(unsigned char));
-    for (int idx = 0; idx < w * h; idx++)
-    {
+    for (int idx = 0; idx < w * h; idx++) {
         unsigned char pixel = inImg.pixels[idx];
         resultImage[3 * idx] = pixel;
         resultImage[3 * idx + 1] = pixel;
         resultImage[3 * idx + 2] = pixel;
     }
 
-    for (size_t idx = 0; idx < lines.size(); idx++)
-    {
+    for (size_t idx = 0; idx < lines.size(); idx++) {
         drawLine(resultImage, w, h, lines[idx].r, lines[idx].theta);
     }
 
     savePPM("output_shared.ppm", resultImage, w, h);
-    printf("Imagen con líneas guardada en 'output_shared.ppm'\n");
+    printf("Imagen 'output_shared.ppm' creada\n");
 
     cv::Mat imgMat(h, w, CV_8UC3, resultImage);
     cv::imwrite("output_shared.png", imgMat);
-    printf("Imagen con líneas guardada en 'output_shared.png'\n");
+    printf("Imagen 'output_shared.png' creada\n");
 
     free(h_hough);
     delete[] cpuht;

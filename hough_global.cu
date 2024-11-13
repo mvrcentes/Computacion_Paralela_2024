@@ -236,7 +236,7 @@ int main(int argc, char **argv) {
 
     // Guardar resultados
     savePPM("output_global.ppm", resultImage, w, h);
-    printf("Imagen 'output_global.ppm creada'\n");
+    printf("Imagen 'output_global.ppm' creada\n");
 
     free(h_hough);
     delete[] cpuht;
