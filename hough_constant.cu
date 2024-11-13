@@ -93,9 +93,9 @@ void drawLine(unsigned char *image, int w, int h, double r, double theta) {
             int yInt = yCent - (int)(y + 0.5);
             if (yInt >= 0 && yInt < h) {
                 int idx = yInt * w + x;
-                image[3 * idx] = 255;     // R
-                image[3 * idx + 1] = 0;   // G
-                image[3 * idx + 2] = 0;   // B
+                image[3 * idx] = 0;     // R
+                image[3 * idx + 1] = 255;   // G
+                image[3 * idx + 2] = 255;   // B
             }
         }
     } else {
@@ -104,9 +104,9 @@ void drawLine(unsigned char *image, int w, int h, double r, double theta) {
             int xInt = (int)(x + xCent + 0.5);
             if (xInt >= 0 && xInt < w) {
                 int idx = y * w + xInt;
-                image[3 * idx] = 255;     // R
-                image[3 * idx + 1] = 0;   // G
-                image[3 * idx + 2] = 0;   // B
+                image[3 * idx] = 0;     // R
+                image[3 * idx + 1] = 255;   // G
+                image[3 * idx + 2] = 255;   // B
             }
         }
     }

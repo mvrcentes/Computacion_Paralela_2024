@@ -90,8 +90,8 @@ void drawLine(unsigned char *image, int w, int h, double r, double theta) {
             int yInt = yCent - (int)(y + 0.5);
             if (yInt >= 0 && yInt < h) {
                 int idx = yInt * w + x;
-                image[3 * idx] = 255;     // R
-                image[3 * idx + 1] = 0;   // G
+                image[3 * idx] = 0;     // R
+                image[3 * idx + 1] = 255;   // G
                 image[3 * idx + 2] = 0;   // B
             }
         }
@@ -101,8 +101,8 @@ void drawLine(unsigned char *image, int w, int h, double r, double theta) {
             int xInt = (int)(x + xCent + 0.5);
             if (xInt >= 0 && xInt < w) {
                 int idx = y * w + xInt;
-                image[3 * idx] = 255;     // R
-                image[3 * idx + 1] = 0;   // G
+                image[3 * idx] = 0;     // R
+                image[3 * idx + 1] = 255;   // G
                 image[3 * idx + 2] = 0;   // B
             }
         }
@@ -198,7 +198,7 @@ int main(int argc, char **argv) {
     }
     double mean = sum / total;
     double variance = (sumSq / total) - (mean * mean);
-    double threshold = mean + 3 * sqrt(variance);
+    double threshold = mean + 2.555 * sqrt(variance);
 
     std::vector<Line> lines;
     for (int rIdx = 0; rIdx < rBins; rIdx++) {
@@ -211,6 +211,8 @@ int main(int argc, char **argv) {
             }
         }
     }
+
+    printf("Cantidad de líneas detectadas: %lu\n", lines.size());
 
     // Crear imagen con líneas detectadas
     unsigned char *resultImage = (unsigned char *)malloc(w * h * 3 * sizeof(unsigned char));
@@ -230,11 +232,11 @@ int main(int argc, char **argv) {
 
     // Guardar la imagen en formato PNG
     cv::imwrite("output_global.png", imgMat);
-    printf("Imagen con líneas guardada en 'output_global.png'\n");
+    printf("Imagen 'output_global.png' creada\n");
 
     // Guardar resultados
     savePPM("output_global.ppm", resultImage, w, h);
-    printf("Imagen con líneas guardada en 'output_global.ppm'\n");
+    printf("Imagen 'output_global.ppm creada'\n");
 
     free(h_hough);
     delete[] cpuht;

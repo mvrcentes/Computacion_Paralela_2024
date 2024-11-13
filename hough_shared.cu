@@ -118,9 +118,9 @@ void drawLine(unsigned char *image, int w, int h, double r, double theta)
             if (yInt >= 0 && yInt < h)
             {
                 int idx = yInt * w + x;
-                image[3 * idx] = 255;     
-                image[3 * idx + 1] = 0;   
-                image[3 * idx + 2] = 0;   
+                image[3 * idx] = 0;     
+                image[3 * idx + 1] = 255;   
+                image[3 * idx + 2] = 255;   
             }
         }
     }
@@ -133,9 +133,9 @@ void drawLine(unsigned char *image, int w, int h, double r, double theta)
             if (xInt >= 0 && xInt < w)
             {
                 int idx = y * w + xInt;
-                image[3 * idx] = 255;
-                image[3 * idx + 1] = 0;
-                image[3 * idx + 2] = 0;
+                image[3 * idx] = 0;
+                image[3 * idx + 1] = 255;
+                image[3 * idx + 2] = 255;
             }
         }
     }
@@ -238,7 +238,7 @@ int main(int argc, char **argv)
         }
     }
 
-    printf("Número de líneas detectadas: %lu\n", lines.size());
+    printf("Cantidad de líneas detectadas: %lu\n", lines.size());
 
     unsigned char *resultImage = (unsigned char *)malloc(w * h * 3 * sizeof(unsigned char));
     for (int idx = 0; idx < w * h; idx++)
