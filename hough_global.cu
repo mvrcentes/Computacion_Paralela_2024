@@ -7,27 +7,35 @@
 #include "pgm.h"
 #include <opencv2/opencv.hpp>
 
-const int degreeInc = 2;
-const int degreeBins = 180 / degreeInc;
-const int rBins = 100;
-const double radInc = degreeInc * M_PI / 180;
+// Constantes utilizadas en la Transformada de Hough
+const int degreeInc = 2;            // Incremento en grados para el ángulo theta
+const int degreeBins = 180 / degreeInc; // Número de bins en theta
+const int rBins = 100;              // Número de bins en r (distancia perpendicular a la línea)
+const double radInc = degreeInc * M_PI / 180; // Incremento en radianes para theta
 
 // Estructura para almacenar los parámetros de las líneas detectadas
 struct Line {
-    double r;
-    double theta;
+    double r;       // Distancia r desde el origen
+    double theta;   // Ángulo theta de la línea en radianes
 };
 
-// Función en CPU para la Transformada de Hough
+// Función en CPU para calcular la Transformada de Hough
 void CPU_HoughTran(unsigned char *pic, int w, int h, int **acc) {
+    // Calcular el valor máximo de r (hipotenusa del rectángulo que cubre la imagen)
     double rMax = sqrt(1.0 * w * w + 1.0 * h * h) / 2.0;
+
+    // Inicializar el acumulador en memoria
     *acc = new int[rBins * degreeBins];
     memset(*acc, 0, sizeof(int) * rBins * degreeBins);
+
+    // Calcular el centro de la imagen
     int xCent = w / 2;
     int yCent = h / 2;
+
+    // Escala de r para ajustar los valores al rango de bins
     double rScale = (2.0 * rMax) / rBins;
 
-    // Precomputar valores de theta
+    // Precalcular los valores de theta para optimizar cálculos
     double *thetaValues = new double[degreeBins];
     double theta = 0.0;
     for (int tIdx = 0; tIdx < degreeBins; tIdx++) {
@@ -35,15 +43,18 @@ void CPU_HoughTran(unsigned char *pic, int w, int h, int **acc) {
         theta += radInc;
     }
 
+    // Iterar sobre todos los píxeles de la imagen
     for (int i = 0; i < w; i++) {
         for (int j = 0; j < h; j++) {
             int idx = j * w + i;
-            if (pic[idx] > 0) {
+            if (pic[idx] > 0) { // Verificar si el píxel es parte del borde
                 int xCoord = i - xCent;
                 int yCoord = yCent - j;
                 for (int tIdx = 0; tIdx < degreeBins; tIdx++) {
+                    // Calcular r usando el valor precalculado de theta
                     double r = xCoord * cos(thetaValues[tIdx]) + yCoord * sin(thetaValues[tIdx]);
                     int rIdx = (int)((r + rMax) / rScale + 0.5);
+                    // Aumentar el contador en el acumulador si rIdx es válido
                     if (rIdx >= 0 && rIdx < rBins) {
                         (*acc)[rIdx * degreeBins + tIdx]++;
                     }
@@ -54,23 +65,26 @@ void CPU_HoughTran(unsigned char *pic, int w, int h, int **acc) {
     delete[] thetaValues;
 }
 
-// Kernel de GPU para la Transformada de Hough (usando solo memoria global)
+// Kernel de GPU para la Transformada de Hough (usa solo memoria global)
 __global__ void GPU_HoughTran(unsigned char *pic, int w, int h, int *acc, double rMax, double rScale, double *d_Cos, double *d_Sin) {
+    // Identificar el hilo global
     int gloID = blockIdx.x * blockDim.x + threadIdx.x;
     if (gloID >= w * h) return;
 
     int xCent = w / 2;
     int yCent = h / 2;
 
+    // Calcular coordenadas relativas al centro de la imagen
     int xCoord = gloID % w - xCent;
     int yCoord = yCent - gloID / w;
 
+    // Si el píxel es parte del borde, procesarlo
     if (pic[gloID] > 0) {
         for (int tIdx = 0; tIdx < degreeBins; tIdx++) {
             double r = xCoord * d_Cos[tIdx] + yCoord * d_Sin[tIdx];
             int rIdx = (int)((r + rMax) / rScale + 0.5);
             if (rIdx >= 0 && rIdx < rBins) {
-                atomicAdd(acc + (rIdx * degreeBins + tIdx), 1);
+                atomicAdd(acc + (rIdx * degreeBins + tIdx), 1); // Actualización atómica
             }
         }
     }
@@ -84,26 +98,26 @@ void drawLine(unsigned char *image, int w, int h, double r, double theta) {
     double cosT = cos(theta);
     double sinT = sin(theta);
 
-    if (fabs(sinT) > 0.5) {
+    if (fabs(sinT) > 0.5) { // Dibujar en función de x si sinT es grande
         for (int x = 0; x < w; x++) {
             double y = (r - (x - xCent) * cosT) / sinT;
             int yInt = yCent - (int)(y + 0.5);
             if (yInt >= 0 && yInt < h) {
                 int idx = yInt * w + x;
-                image[3 * idx] = 0;     // R
-                image[3 * idx + 1] = 255;   // G
-                image[3 * idx + 2] = 0;   // B
+                image[3 * idx] = 0;         // Componente R
+                image[3 * idx + 1] = 255;   // Componente G
+                image[3 * idx + 2] = 0;     // Componente B
             }
         }
-    } else {
+    } else { // Dibujar en función de y si sinT es pequeño
         for (int y = 0; y < h; y++) {
             double x = (r - (yCent - y) * sinT) / cosT;
             int xInt = (int)(x + xCent + 0.5);
             if (xInt >= 0 && xInt < w) {
                 int idx = y * w + xInt;
-                image[3 * idx] = 0;     // R
-                image[3 * idx + 1] = 255;   // G
-                image[3 * idx + 2] = 0;   // B
+                image[3 * idx] = 0;         // Componente R
+                image[3 * idx + 1] = 255;   // Componente G
+                image[3 * idx + 2] = 0;     // Componente B
             }
         }
     }
@@ -131,11 +145,11 @@ int main(int argc, char **argv) {
     int w = inImg.x_dim;
     int h = inImg.y_dim;
 
-    // CPU Hough Transform
+    // Transformada de Hough en CPU
     int *cpuht;
     CPU_HoughTran(inImg.pixels, w, h, &cpuht);
 
-    // Precompute sine and cosine tables
+    // Precomputar tablas de seno y coseno para optimización en GPU
     double *thetaValues = (double *)malloc(sizeof(double) * degreeBins);
     double *pcCos = (double *)malloc(sizeof(double) * degreeBins);
     double *pcSin = (double *)malloc(sizeof(double) * degreeBins);
@@ -147,16 +161,16 @@ int main(int argc, char **argv) {
         theta += radInc;
     }
 
+    // Variables auxiliares para GPU
     double rMax = sqrt(1.0 * w * w + 1.0 * h * h) / 2.0;
     double rScale = (2.0 * rMax) / rBins;
-
-    // Allocate and copy sine and cosine tables to device
     double *d_Cos, *d_Sin;
     cudaMalloc((void **)&d_Cos, sizeof(double) * degreeBins);
     cudaMalloc((void **)&d_Sin, sizeof(double) * degreeBins);
     cudaMemcpy(d_Cos, pcCos, sizeof(double) * degreeBins, cudaMemcpyHostToDevice);
     cudaMemcpy(d_Sin, pcSin, sizeof(double) * degreeBins, cudaMemcpyHostToDevice);
 
+    // Configuración de memoria para la imagen y acumulador en GPU
     unsigned char *d_in;
     int *d_hough;
     cudaMalloc((void **)&d_in, sizeof(unsigned char) * w * h);
@@ -164,32 +178,35 @@ int main(int argc, char **argv) {
     cudaMemcpy(d_in, inImg.pixels, sizeof(unsigned char) * w * h, cudaMemcpyHostToDevice);
     cudaMemset(d_hough, 0, sizeof(int) * degreeBins * rBins);
 
+    // Configuración del grid de hilos para GPU y sincronización de eventos
     int threadsPerBlock = 256;
     int blockNum = (w * h + threadsPerBlock - 1) / threadsPerBlock;
-
-    // Medición de tiempo en GPU
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
     cudaEventRecord(start);
 
+    // Ejecutar Transformada de Hough en GPU
     GPU_HoughTran<<<blockNum, threadsPerBlock>>>(d_in, w, h, d_hough, rMax, rScale, d_Cos, d_Sin);
 
+    // Medir el tiempo de ejecución en GPU
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
     float elapsedTime;
     cudaEventElapsedTime(&elapsedTime, start, stop);
     printf("Tiempo en GPU: %f ms\n", elapsedTime);
 
+    // Recuperar los resultados del acumulador
     int *h_hough = (int *)malloc(degreeBins * rBins * sizeof(int));
     cudaMemcpy(h_hough, d_hough, sizeof(int) * degreeBins * rBins, cudaMemcpyDeviceToHost);
 
+    // Liberar memoria en GPU
     cudaFree(d_in);
     cudaFree(d_hough);
     cudaFree(d_Cos);
     cudaFree(d_Sin);
 
-    // Detección de líneas y umbral
+    // Procesar el acumulador para detectar líneas
     double sum = 0.0, sumSq = 0.0;
     int total = degreeBins * rBins;
     for (int i = 0; i < total; i++) {
@@ -200,6 +217,7 @@ int main(int argc, char **argv) {
     double variance = (sumSq / total) - (mean * mean);
     double threshold = mean + 2.555 * sqrt(variance);
 
+    // Almacenar las líneas detectadas
     std::vector<Line> lines;
     for (int rIdx = 0; rIdx < rBins; rIdx++) {
         for (int tIdx = 0; tIdx < degreeBins; tIdx++) {
@@ -214,7 +232,7 @@ int main(int argc, char **argv) {
 
     printf("Cantidad de líneas detectadas: %lu\n", lines.size());
 
-    // Crear imagen con líneas detectadas
+    // Crear imagen de salida con líneas dibujadas
     unsigned char *resultImage = (unsigned char *)malloc(w * h * 3 * sizeof(unsigned char));
     for (int idx = 0; idx < w * h; idx++) {
         unsigned char pixel = inImg.pixels[idx];
@@ -222,22 +240,19 @@ int main(int argc, char **argv) {
         resultImage[3 * idx + 1] = pixel;
         resultImage[3 * idx + 2] = pixel;
     }
-
     for (const auto &line : lines) {
         drawLine(resultImage, w, h, line.r, line.theta);
     }
 
-    // Crear un objeto cv::Mat con la imagen resultante
+    // Guardar imagen en formato PNG y PPM
     cv::Mat imgMat(h, w, CV_8UC3, resultImage);
-
-    // Guardar la imagen en formato PNG
     cv::imwrite("output_global.png", imgMat);
     printf("Imagen 'output_global.png' creada\n");
 
-    // Guardar resultados
     savePPM("output_global.ppm", resultImage, w, h);
     printf("Imagen 'output_global.ppm' creada\n");
 
+    // Liberar memoria
     free(h_hough);
     delete[] cpuht;
     free(pcCos);
